@@ -4,9 +4,10 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const User = require("./models/User");
+const serverless = require("serverless-http");
 
 require("dotenv").config();
-const PORT = process.env.PORT || 4000;
+// const PORT = process.env.PORT || 4000;
 const baseURL = process.env.BASE_URL;
 
 const app = express();
@@ -14,13 +15,29 @@ app.use(express.json());
 app.use(cors()); // ✅ allow frontend to call backend
 
 
+
+let isConnected = false; // track the connection
+
+async function connectToDatabase() {
+  if (isConnected) return;
+
+  try {
+    const conn = await mongoose.connect(process.env.DATABASE_URL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    isConnected = conn.connections[0].readyState;
+    console.log("✅ MongoDB connected");
+  } catch (error) {
+    console.error("❌ MongoDB connection error:", error);
+    throw error;
+  }
+}
+
+
 // ✅ Connect MongoDB
-mongoose.connect("mongodb://localhost:27017/FiestaDB", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ DB error:", err));
+connectToDatabase();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -128,5 +145,5 @@ app.get("/validate/:rollno", async (req, res) => {
 });
 
 
-
-app.listen(PORT, () => console.log("🚀 Backend running at " + PORT));
+module.exports = serverless(app);
+// app.listen(PORT, () => console.log("🚀 Backend running at " + PORT));
