@@ -89,7 +89,7 @@ app.post("/register", async (req, res) => {
 
     // Send email with QR code
     await transporter.sendMail({
-      from: '"Event Team" <komal.rawatx@gmail.com>',
+      from: process.env.EMAIL_USER,
       to: email,
       subject: "Your Event QR Code Entry Pass",
       html: `
